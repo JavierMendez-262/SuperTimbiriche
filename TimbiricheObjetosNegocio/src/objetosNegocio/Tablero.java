@@ -19,7 +19,7 @@ public class Tablero implements ActionListener {
     private int i = 0, tamanio, iter = 0;
     private int[] turnos;
     private boolean cont1=false, comenzado = false;
-    private Linea[][] matriz;
+    private Forma[][] matriz;
     private Marcador marcador;
     private IMarcador iM;
     private ITurnos iT;
@@ -30,7 +30,7 @@ public class Tablero implements ActionListener {
      * @param jugadores
      * @param turnos 
      */
-    public Tablero(Jugador jugadorC, ArrayList <Jugador> jugadores, int[] turnos, int tamanio, Linea[][] matriz, Marcador marcador, IMarcador iM, ITurnos iT){
+    public Tablero(Jugador jugadorC, ArrayList <Jugador> jugadores, int[] turnos, int tamanio, Forma[][] matriz, Marcador marcador, IMarcador iM, ITurnos iT){
         this.jugadores = jugadores;
         this.turnos = turnos;
         this.jugadorC = jugadorC;
@@ -46,7 +46,7 @@ public class Tablero implements ActionListener {
      * Recibe la matriz y acomoda el tablero.
      * @param add 
      */
-    public Linea[][] acomodar(boolean add){
+    public Forma[][] acomodar(boolean add){
         int n1=0, n2=0, n3=0, n4=0;
         if (tamanio == 2) {
             n1 = 0;
@@ -68,7 +68,7 @@ public class Tablero implements ActionListener {
         for(int x=0;x<iter;x++){
             for(int y=0;y<iter;y++){
                 if(add){
-                    matriz[x][y]=new Linea();
+                    matriz[x][y]=new Linea(false, null);
                     matriz[x][y].addActionListener(this);
                 }else{
                     matriz[x][y].setOwner(null);
@@ -92,8 +92,8 @@ public class Tablero implements ActionListener {
                         matriz[x][y].setBorderPainted(false);
                         matriz[x][y].setBackground(Color.white);
                     }else{
+                        matriz[x][y] = new Cuadro();
                         matriz[x][y].setBounds(n2+(n4*(y/2)),n2+(n4*(x/2)),n3,n3);
-                        matriz[x][y].setCuadro(true);
                         matriz[x][y].setBorderPainted(false);
                         matriz[x][y].setBackground(Color.white);
                         matriz[x][y].setEnabled(false);
@@ -110,28 +110,32 @@ public class Tablero implements ActionListener {
      * @param player
      * @param matriz
      */
-    public void check(Jugador player, Linea[][] matriz){
+    public void check(Jugador player, Forma[][] matriz){
         boolean doble = false;
         for(int x=0;x<iter;x++){
             for(int y=0;y<iter;y++){
-                if(matriz[x][y].getCuadro() && !matriz[x][y].getTomado()){
+                if(matriz[x][y].getClass().toString().equals("class objetosNegocio.Cuadro") && !matriz[x][y].getTomado()){
                     if(matriz[x-1][y].getTomado() && matriz[x+1][y].getTomado() 
                             && matriz[x][y-1].getTomado() 
                             && matriz[x][y+1].getTomado()){
-                        matriz[x][y].setOwner(player);
                         matriz[x][y].setTomado(true);
+                        matriz[x][y].setOwner(player);
+                        matriz[x][y].llenar();
                         int v = 0;
                         for (Jugador j : jugadores) {
+                            int [] pun = marcador.getPuntajes();
                             if (player.getNickname().equalsIgnoreCase(j.getNickname())) {
-                                if (v == 0) {
-                                    marcador.setpJ1(marcador.getpJ1()+1);
-                                } else if (v == 1){
-                                    marcador.setpJ2(marcador.getpJ2()+1);
-                                } else if (v == 2){
-                                    marcador.setpJ3(marcador.getpJ3()+1);
-                                } else if (v == 3){
-                                    marcador.setpJ4(marcador.getpJ4()+1);
-                                }
+                                pun[v] = pun[v]+1;
+                                marcador.setPuntajes(pun);
+//                                if (v == 0) {
+//                                    marcador.setpJ1(marcador.getpJ1()+1);
+//                                } else if (v == 1){
+//                                    marcador.setpJ2(marcador.getpJ2()+1);
+//                                } else if (v == 2){
+//                                    marcador.setpJ3(marcador.getpJ3()+1);
+//                                } else if (v == 3){
+//                                    marcador.setpJ4(marcador.getpJ4()+1);
+//                                }
                             } else {
                                 v++;
                             }
@@ -165,11 +169,11 @@ public class Tablero implements ActionListener {
      * Termina el juego.
      */
     public void finJuego(){
-        int [] puntajes =  new int [4];
-        puntajes[0] = marcador.getpJ1();
-        puntajes[1] = marcador.getpJ2();
-        puntajes[2] = marcador.getpJ3();
-        puntajes[3] = marcador.getpJ4();
+        int [] puntajes =  marcador.getPuntajes();
+//        puntajes[0] = marcador.getpJ1();
+//        puntajes[1] = marcador.getpJ2();
+//        puntajes[2] = marcador.getpJ3();
+//        puntajes[3] = marcador.getpJ4();
         boolean empate = false;
         int pMayor = 0, jMayor = 0;
         
@@ -185,17 +189,19 @@ public class Tablero implements ActionListener {
         }
         
         String punt = "Puntajes: ";
-        if (tamanio == 2) {
-            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2());
-        } else if (tamanio == 3){
-            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2())
-            + " " + jugadores.get(2).getNickname() + ": " + Integer.toString(marcador.getpJ3());
-        } else if (tamanio == 4){
-            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2())
-            + " " + jugadores.get(2).getNickname() + ": " + Integer.toString(marcador.getpJ3()) + " " + jugadores.get(3).getNickname() + ": " + Integer.toString(marcador.getpJ4());
+        for (int j = 0; j < puntajes.length; j++) {
+            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(puntajes[j]);
         }
         
-        
+//        if (tamanio == 2) {
+//            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2());
+//        } else if (tamanio == 3){
+//            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2())
+//            + " " + jugadores.get(2).getNickname() + ": " + Integer.toString(marcador.getpJ3());
+//        } else if (tamanio == 4){
+//            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(marcador.getpJ1()) + " " + jugadores.get(1).getNickname() + ": " + Integer.toString(marcador.getpJ2())
+//            + " " + jugadores.get(2).getNickname() + ": " + Integer.toString(marcador.getpJ3()) + " " + jugadores.get(3).getNickname() + ": " + Integer.toString(marcador.getpJ4());
+//        }
         
         if (empate) {
             JOptionPane.showMessageDialog(null, "Empate \n" + punt);
@@ -302,7 +308,7 @@ public class Tablero implements ActionListener {
      * @param y
      * @return Linea en X y Y.
      */
-    public Linea getLinea(int x, int y) {
+    public Forma getLinea(int x, int y) {
         return matriz[x][y];
     }
     
