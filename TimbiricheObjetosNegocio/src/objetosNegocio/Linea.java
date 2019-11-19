@@ -11,4 +11,3 @@ public class Linea extends Forma{
     }   
     
 }
-

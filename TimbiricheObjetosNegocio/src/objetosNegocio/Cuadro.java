@@ -11,4 +11,4 @@ public class Cuadro extends Forma{
     public Cuadro(boolean tomado, Jugador owner) {
         super(tomado, owner);
     }   
-} 
+}

@@ -12,13 +12,13 @@ import javax.swing.JOptionPane;
  * Clase que hace la funcionalidad del tablero.
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
-public class Tablero implements ActionListener {
+public class Tablero implements ActionListener{
     
     private ArrayList <Jugador> jugadores;
     private Jugador jugadorC;
     private int i = 0, tamanio, iter = 0;
     private int[] turnos;
-    private boolean cont1=false, comenzado = false;
+    private boolean cont1=false, comenzado = false, conectado=false;;
     private Forma[][] matriz;
     private Marcador marcador;
     private IMarcador iM;
@@ -30,7 +30,7 @@ public class Tablero implements ActionListener {
      * @param jugadores
      * @param turnos 
      */
-    public Tablero(Jugador jugadorC, ArrayList <Jugador> jugadores, int[] turnos, int tamanio, Forma[][] matriz, Marcador marcador, IMarcador iM, ITurnos iT){
+    public Tablero(Jugador jugadorC, ArrayList <Jugador> jugadores, int[] turnos, int tamanio, Forma[][] matriz, Marcador marcador, IMarcador iM, ITurnos i){
         this.jugadores = jugadores;
         this.turnos = turnos;
         this.jugadorC = jugadorC;
@@ -340,5 +340,5 @@ public class Tablero implements ActionListener {
     public void iniciar() {
         comenzado = true;
     }    
-    
+
 }
