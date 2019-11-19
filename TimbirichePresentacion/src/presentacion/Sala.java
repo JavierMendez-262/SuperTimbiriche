@@ -48,6 +48,19 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
         crearPanel();
     }
     
+    public Sala(Jugador jugador) {
+        centraVentana();
+        initComponents();
+        jugador1 = jugador;
+        
+        crearJugadoresProvisionales();
+        coloresDefecto();
+        crearMarcador();
+        sortearTurnos();
+        crearTablero();
+        crearPanel();
+    }
+    
     private void centraVentana() {
         Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
         int height = pantalla.height;

@@ -1,8 +1,11 @@
 package presentacion;
 
+import conexion.Cliente;
+import interfaces.IConexion;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import objetosNegocio.Jugador;
 
 /**
@@ -10,10 +13,11 @@ import objetosNegocio.Jugador;
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
 public class Inicio extends javax.swing.JFrame {
-
-    
     private Jugador jugador;
     private boolean crearJuego = false;
+    private Sala s;
+    private Cliente client;
+    private IConexion ICon;
     
     /**
      * Constructor principal.
@@ -38,9 +42,15 @@ public class Inicio extends javax.swing.JFrame {
         setIconImage (new ImageIcon(getClass().getResource("/imagenes/icon.jpg")).getImage());
     }
 
-    public void crear(Jugador jugador, int tamanio) {
-        Sala tab = new Sala(jugador, tamanio);
-        tab.setVisible(true);
+    public void crear(Jugador jugador, int tamanio) {     
+        s = new Sala(jugador, tamanio);
+        s.setVisible(true);
+        setVisible(false);
+    }
+    
+    public void unirse(Jugador jugador) {
+        s = new Sala(jugador);
+        s.setVisible(true);
         setVisible(false);
     }
     
@@ -166,6 +176,8 @@ public class Inicio extends javax.swing.JFrame {
             unirseJuegoBtn.setText("3 jugadores");
             boton3.setVisible(true);
         } else {
+            ICon = new Cliente();
+            ICon.conexion();
             crear(jugador, 2);
         } 
     }//GEN-LAST:event_nuevoJuegoBtnActionPerformed
@@ -173,6 +185,11 @@ public class Inicio extends javax.swing.JFrame {
     private void unirseJuegoBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_unirseJuegoBtnActionPerformed
         if (crearJuego){
             crear(jugador, 3);
+        } else {
+            String ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
+            ICon = new Cliente();
+            ICon.conexion();
+            unirse(jugador);
         }
     }//GEN-LAST:event_unirseJuegoBtnActionPerformed
 
