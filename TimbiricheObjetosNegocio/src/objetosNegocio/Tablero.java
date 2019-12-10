@@ -2,9 +2,6 @@ package objetosNegocio;
 
 import interfaces.IMarcador;
 import interfaces.ITurnos;
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
@@ -12,13 +9,12 @@ import javax.swing.JOptionPane;
  * Clase que hace la funcionalidad del tablero.
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
-public class Tablero implements ActionListener{
+public class Tablero {
     
-    private ArrayList <Jugador> jugadores;
-    private Jugador jugadorC;
-    private int i = 0, tamanio, iter = 0;
+    private Jugadores jugadores;
+    private int i = 0, tamanio, iter;
     private int[] turnos;
-    private boolean cont1=false, comenzado = false, conectado=false;;
+    private boolean cont1=false, conectado=false;;
     private Forma[][] matriz;
     private Marcador marcador;
     private IMarcador iM;
@@ -30,78 +26,15 @@ public class Tablero implements ActionListener{
      * @param jugadores
      * @param turnos 
      */
-    public Tablero(Jugador jugadorC, ArrayList <Jugador> jugadores, int[] turnos, int tamanio, Forma[][] matriz, Marcador marcador, IMarcador iM, ITurnos i){
+    public Tablero(Jugadores jugadores, int[] turnos, int tamanio, Forma[][] matriz, Marcador marcador, int iter, IMarcador iM, ITurnos iT){
         this.jugadores = jugadores;
         this.turnos = turnos;
-        this.jugadorC = jugadorC;
         this.tamanio = tamanio;
         this.matriz = matriz;
         this.marcador = marcador;
+        this.iter = iter;
         this.iM = iM;
         this.iT = iT;
-        iteraciones();
-    }
-
-    /**
-     * Recibe la matriz y acomoda el tablero.
-     * @param add 
-     */
-    public Forma[][] acomodar(boolean add){
-        int n1=0, n2=0, n3=0, n4=0;
-        if (tamanio == 2) {
-            n1 = 0;
-            n2 = 11;
-            n3 = 73;
-            n4 = 81;
-        } else if (tamanio == 3){
-            n1 = 0;
-            n2 = 5;
-            n3 = 35;
-            n4 = 39;
-        } else {
-            n1 = 0;
-            n2 = 3;
-            n3 = 17;
-            n4 = 19;
-        }
-        
-        for(int x=0;x<iter;x++){
-            for(int y=0;y<iter;y++){
-                if(add){
-                    matriz[x][y]=new Linea(false, null);
-                    matriz[x][y].addActionListener(this);
-                }else{
-                    matriz[x][y].setOwner(null);
-                    matriz[x][y].setTomado(false);
-                }
-                if(x%2==0){
-                    if(y%2==0){
-                        matriz[x][y].setBounds(n1+(n4*(y/2)),n1+(n4*(x/2)),n2,n2);
-                        matriz[x][y].setBorderPainted(false);
-                        matriz[x][y].setTomado(true);
-                        matriz[x][y].setOwner(new Jugador ("Nulo", Color.black));
-                        matriz[x][y].setEnabled(false);
-                    }else{
-                        matriz[x][y].setBounds(n2+(n4*(y/2)),n1+(n4*(x/2)),n3,n2);
-                        matriz[x][y].setBorderPainted(false);
-                        matriz[x][y].setBackground(Color.white);
-                    }
-                }else{
-                    if(y%2==0){
-                        matriz[x][y].setBounds(n1+(n4*(y/2)),n2+(n4*(x/2)),n2,n3);
-                        matriz[x][y].setBorderPainted(false);
-                        matriz[x][y].setBackground(Color.white);
-                    }else{
-                        matriz[x][y] = new Cuadro();
-                        matriz[x][y].setBounds(n2+(n4*(y/2)),n2+(n4*(x/2)),n3,n3);
-                        matriz[x][y].setBorderPainted(false);
-                        matriz[x][y].setBackground(Color.white);
-                        matriz[x][y].setEnabled(false);
-                    }
-                }    
-            }
-        }
-        return matriz;
     }
     
     /**
@@ -122,9 +55,9 @@ public class Tablero implements ActionListener{
                         matriz[x][y].setOwner(player);
                         matriz[x][y].llenar();
                         int v = 0;
-                        for (Jugador j : jugadores) {
+                        for (int j = 0; j < jugadores.size(); j++) {
                             int [] pun = marcador.getPuntajes();
-                            if (player.getNickname().equalsIgnoreCase(j.getNickname())) {
+                            if (player.getNickname().equalsIgnoreCase(jugadores.get(j).getNickname())) {
                                 pun[v] = pun[v]+1;
                                 marcador.setPuntajes(pun);
 //                                if (v == 0) {
@@ -156,7 +89,19 @@ public class Tablero implements ActionListener{
         iM.setMarcador(marcador);
         iM.puntajes();
     }
-    
+
+    public int getI() {
+        return i;
+    }
+
+    public void setI(int i) {
+        this.i = i;
+    }
+
+    public void setMatriz(Forma[][] matriz) {
+        this.matriz = matriz;
+    }
+   
 //    /**
 //     * Regresa el marcador actual.
 //     * @return 
@@ -220,18 +165,9 @@ public class Tablero implements ActionListener{
 //        return comenzado;
 //    }
     
-    /**
-     * Cambia la variable de iteraciones según el tamaño del tablero.
-     */
-    public void iteraciones (){
-        if (tamanio == 2) {
-            iter = 19;
-        } else if (tamanio == 3){
-            iter = 39;
-        } else {
-            iter = 79;
-        }
-    }
+   
+    
+   
     
 //    /**
 //     * Define la matriz del tablero.
@@ -244,49 +180,6 @@ public class Tablero implements ActionListener{
 //    public Linea[][] getMatriz (){
 //        return matriz;
 //    }
-    
-    @Override
-    public void actionPerformed(ActionEvent ae) {
-        if (comenzado){
-            if (i == tamanio) {
-                i = 0;
-            }
-            
-            int i2 = i+1;
-            if (i2 >= tamanio) {
-                i2 = 0;
-            }
-            
-            Integer x=0;
-            Integer y=0;
-            boolean ban=false, tomado = false;
-            for(x=0;x<iter;x++){
-                for(y=0;y<iter;y++){
-                    if(ae.getSource()== getLinea(x, y)){
-                        if (getLinea(x, y).getTomado()) {
-                            tomado = true;
-                        } else {
-                            getLinea(x, y).setTomado(true);
-                            getLinea(x, y).setBackground(jugadores.get(turnos[i]).getColor());
-                            getLinea(x, y).setOwner(jugadores.get(turnos[i]));
-                            iT.turno(jugadores.get(turnos[i2]));
-                            ban=true;
-                            break;
-                        }
-                    }
-                }
-                if(ban)
-                    break;
-            }
-            if (!tomado) {
-                check(jugadores.get(turnos[i]), matriz);
-                i++;
-                if(ganador()){
-                    finJuego();
-                }          
-            }
-        }
-    }
     
     /**
      * Verifica si alguien ganó
@@ -318,27 +211,21 @@ public class Tablero implements ActionListener{
                 if(matriz[x][y].getTomado()){            
                 getLinea(x, y).setTomado(matriz[x][y].getTomado());
                 getLinea(x, y).setOwner(matriz[x][y].getOwner());
+                //Obtiene las lineas en la posicion x & y, & establece su color. Al de si misma con el nuevo color de poseedor de la linea
                 getLinea(x, y).setBackground(getLinea(x, y).getOwner().getColor()); 
                 }
             }
     }
 
-//    public void reAcomodar(int x, int y, Jugador jugador2) {
-//        iNegocio.nombres(jugadorC.getNickname(), jugador2.getNickname());
-//        try{
-//            iNegocio.getLinea(x, y).setTomado(true);
-//            iNegocio.getLinea(x, y).setBackground(Color.blue);
-//            check(jugador2,iNegocio.getMatriz());
-//        }
-//        catch(Exception e){
-//        }
-//    }
-
-    /**
-     * Cambia el booleano comenzado para saber que el juego ha iniciado.
-     */
-    public void iniciar() {
-        comenzado = true;
-    }    
+    public void reAcomodar(int x, int y, Jugador jugador) {
+        try{
+            getLinea(x, y).setTomado(true);
+            getLinea(x, y).setBackground(jugador.getColor());
+            check(jugador,matriz);
+        }
+        catch(Exception e){
+        }
+        reColorear();
+    }
 
 }

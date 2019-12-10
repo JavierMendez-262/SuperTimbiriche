@@ -1,7 +1,5 @@
 package presentacion;
 
-import conexion.Cliente;
-import interfaces.IConexion;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
@@ -16,8 +14,7 @@ public class Inicio extends javax.swing.JFrame {
     private Jugador jugador;
     private boolean crearJuego = false;
     private Sala s;
-    private Cliente client;
-    private IConexion ICon;
+    private String ip;
     
     /**
      * Constructor principal.
@@ -43,13 +40,13 @@ public class Inicio extends javax.swing.JFrame {
     }
 
     public void crear(Jugador jugador, int tamanio) {     
-        s = new Sala(jugador, tamanio);
+        s = new Sala(jugador, tamanio, ip);
         s.setVisible(true);
         setVisible(false);
     }
     
     public void unirse(Jugador jugador) {
-        s = new Sala(jugador);
+        s = new Sala(jugador, ip);
         s.setVisible(true);
         setVisible(false);
     }
@@ -95,6 +92,11 @@ public class Inicio extends javax.swing.JFrame {
 
         salirBtn.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         salirBtn.setText("Salir");
+        salirBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                salirBtnActionPerformed(evt);
+            }
+        });
 
         unirseJuegoBtn.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         unirseJuegoBtn.setText("Unirse a juego");
@@ -176,26 +178,30 @@ public class Inicio extends javax.swing.JFrame {
             unirseJuegoBtn.setText("3 jugadores");
             boton3.setVisible(true);
         } else {
-            ICon = new Cliente();
-            ICon.conexion();
+            ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
             crear(jugador, 2);
         } 
     }//GEN-LAST:event_nuevoJuegoBtnActionPerformed
 
     private void unirseJuegoBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_unirseJuegoBtnActionPerformed
         if (crearJuego){
+            ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
             crear(jugador, 3);
         } else {
-            String ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
-            ICon = new Cliente();
-            ICon.conexion();
+            ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
             unirse(jugador);
         }
     }//GEN-LAST:event_unirseJuegoBtnActionPerformed
 
     private void boton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boton3ActionPerformed
+        ip = JOptionPane.showInputDialog(null,"Introduzca la ip");
         crear(jugador, 4);
     }//GEN-LAST:event_boton3ActionPerformed
+
+    private void salirBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salirBtnActionPerformed
+        Loggin.getInstancia().setVisible(true);
+        this.setVisible(false);
+    }//GEN-LAST:event_salirBtnActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel avatar;

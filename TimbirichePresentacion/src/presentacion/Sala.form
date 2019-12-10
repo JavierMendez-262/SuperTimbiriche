@@ -185,7 +185,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Comic Sans MS" size="12" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Jugador 1"/>
+        <Property name="text" type="java.lang.String" value="Esperando"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="nickJugador2">
@@ -193,7 +193,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Comic Sans MS" size="12" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Jugador 2"/>
+        <Property name="text" type="java.lang.String" value="Esperando"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="nickJugador3">
@@ -201,7 +201,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Comic Sans MS" size="12" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Jugador 3"/>
+        <Property name="text" type="java.lang.String" value="Esperando"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="nickJugador4">
@@ -209,7 +209,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Comic Sans MS" size="12" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Jugador 4"/>
+        <Property name="text" type="java.lang.String" value="Esperando"/>
       </Properties>
     </Component>
     <Container class="javax.swing.JPanel" name="pnlTablero">

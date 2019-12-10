@@ -1,17 +1,27 @@
 package objetosNegocio;
 
 import java.awt.Color;
+import java.io.Serializable;
 import javax.swing.Icon;
 
 /**
  * Clase para crear jugadores.
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
-public class Jugador {
-    String nickname;
-    Icon avatar;
-    Color color;
-    int turno;
+public class Jugador implements Serializable {
+    private String nickname;
+    private Icon avatar;
+    private Color color;
+    private int turno;
+    private boolean listo = false;
+
+    public boolean isListo() {
+        return listo;
+    }
+
+    public void setListo(boolean listo) {
+        this.listo = listo;
+    }
 
     public Jugador(String nickname, Icon avatar, Color color, int turno) {
         this.nickname = nickname;

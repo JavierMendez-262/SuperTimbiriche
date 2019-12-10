@@ -5,149 +5,309 @@ import interfaces.ITurnos;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JOptionPane;
+import objetosNegocio.Cuadro;
 import objetosNegocio.Forma;
 import objetosNegocio.Jugador;
+import objetosNegocio.Linea;
 import objetosNegocio.Marcador;
 import objetosNegocio.Tablero;
+import objetosNegocio.Jugadores;
+import proxy.ClientProxy;
 
 /**
- * Clase para crear el tablero.
- * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
+ * Frame que crea la sala y desarrolla su funcionalidad.
+ *
+ * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique
+ * Mendoza
  */
-public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
+public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, ActionListener {
+
     private JColorChooser selColor = new JColorChooser();
     private Forma[][] matriz;
     private Jugador jugador1, jugador2, jugador3, jugador4;
-    private int tamanio;
+    private int tamanio, iter = 0;
     private Tablero tablero;
     private Marcador marcador;
     private int[] turnos;
-    private ArrayList <Jugador> jugadores;
-    
+    private Jugadores jugadores;
+    private ArrayList <Jugador> jugadoresAux;
+    private boolean comenzado = false;
+    private int portNumber = 777;
+    private ClientProxy clientProxy;
+    private int jugadorNumero;
+
     /**
      * Constructor principal.
-     * @param jugador 
+     *
+     * @param jugador
      */
-    public Sala(Jugador jugador, int tamanio) {
-        centraVentana();
-        initComponents();
-        jugador1 = jugador;
+    public Sala(Jugador jugador, int tamanio, String ip) {
         this.tamanio = tamanio;
-        
-        crearJugadoresProvisionales();
-        coloresDefecto();
-        crearMarcador();
-        sortearTurnos();
-        crearTablero();
-        crearPanel();
-    }
-    
-    public Sala(Jugador jugador) {
         centraVentana();
         initComponents();
-        jugador1 = jugador;
-        
-        crearJugadoresProvisionales();
+        jugadores = Jugadores.getInstance();
+        jugadores.setMaxSize(tamanio);
+        try {
+            clientProxy = new ClientProxy(ip, portNumber, this);
+            clientProxy.establecerTamanio(tamanio);
+            clientProxy.unirSala(jugador);
+        } catch (IOException ex) {
+            Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        jugadorNumero = 0;
         coloresDefecto();
         crearMarcador();
-        sortearTurnos();
+        iteraciones();
         crearTablero();
         crearPanel();
+        jugadoresAux = jugadores.getJugadores();
     }
-    
+
+    /**
+     * Constructor para un jugador que entra a un juego.
+     * @param jugador
+     * @param ip 
+     */
+    public Sala(Jugador jugador, String ip) {
+        centraVentana();
+        initComponents();
+        jugadores = Jugadores.getInstance();
+        try {
+            clientProxy = new ClientProxy(ip, portNumber, this);
+            clientProxy.unirSala(jugador);
+        } catch (IOException ex) {
+            Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        while (jugadores.maxSize() == 0) {
+            System.out.print(jugadores.maxSize());
+        }
+        tamanio = jugadores.maxSize();
+        jugadorNumero = jugadores.size() - 1;
+        coloresDefecto();
+        crearMarcador();
+        iteraciones();
+        crearTablero();
+        crearPanel();
+        jugadoresAux = jugadores.getJugadores();
+    }
+
+    /**
+     * Método para centrar la ventana.
+     */
     private void centraVentana() {
         Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
         int height = pantalla.height;
         int width = pantalla.width;
-        setSize(width/2, height/2);		
+        setSize(width / 2, height / 2);
 
         setLocationRelativeTo(null);
-        setIconImage (new ImageIcon(getClass().getResource("/imagenes/icon.jpg")).getImage());
+        setIconImage(new ImageIcon(getClass().getResource("/imagenes/icon.jpg")).getImage());
     }
-    
+
     /**
      * Crea los jugadores mientras no hay conexión remota.
      */
-    public void crearJugadoresProvisionales (){
+    public void crearJugadoresProvisionales() {
         jugador1.setColor(Color.blue);
         avatar1.setIcon(jugador1.getAvatar());
         nickJugador1.setText(jugador1.getNickname());
-        jugador2 = new Jugador("Lorem", avatar2.getIcon(), Color.red);
-        jugador3 = new Jugador("Ipsum", avatar3.getIcon(), Color.green);
-        jugador4 = new Jugador("Dolor", avatar4.getIcon(), Color.yellow);
-        nickJugador2.setText(jugador2.getNickname());
-        nickJugador3.setText(jugador3.getNickname());
-        nickJugador4.setText(jugador4.getNickname());
         if (tamanio == 2) {
             avatar3.setVisible(false);
             nickJugador3.setVisible(false);
             puntajeJ3.setVisible(false);
             colorBtn3.setVisible(false);
-            
+
             avatar4.setVisible(false);
             nickJugador4.setVisible(false);
             puntajeJ4.setVisible(false);
             colorBtn4.setVisible(false);
-        } else if (tamanio == 3){
+        } else if (tamanio == 3) {
             avatar4.setVisible(false);
             nickJugador4.setVisible(false);
             puntajeJ4.setVisible(false);
             colorBtn4.setVisible(false);
         }
     }
+
     
+    /**
+     * Método que modifica los jugadores en la sala al momento de que alguien
+     * entra.
+     */
+    public void entradaJugador() {
+//        jugadores = (ArrayList<Jugador>) clientProxy.actualizarJugadores();
+        if (jugadores.size() == 1) {
+            jugador1 = jugadores.get(0);
+            jugador1.setColor(Color.blue);
+            avatar1.setIcon(jugador1.getAvatar());
+            nickJugador1.setText(jugador1.getNickname());
+
+            avatar2.setVisible(false);
+            nickJugador2.setVisible(false);
+            puntajeJ2.setVisible(false);
+            colorBtn2.setVisible(false);
+
+            avatar3.setVisible(false);
+            nickJugador3.setVisible(false);
+            puntajeJ3.setVisible(false);
+            colorBtn3.setVisible(false);
+
+            avatar4.setVisible(false);
+            nickJugador4.setVisible(false);
+            puntajeJ4.setVisible(false);
+            colorBtn4.setVisible(false);
+        } else if (jugadores.size() == 2) {
+            jugador1 = jugadores.get(0);
+            jugador1.setColor(Color.blue);
+            avatar1.setIcon(jugador1.getAvatar());
+            nickJugador1.setText(jugador1.getNickname());
+
+            jugador2 = jugadores.get(1);
+            jugador2.setColor(Color.red);
+            avatar2.setIcon(jugador2.getAvatar());
+            nickJugador2.setText(jugador2.getNickname());
+
+            avatar2.setVisible(true);
+            nickJugador2.setVisible(true);
+            puntajeJ2.setVisible(true);
+            colorBtn2.setVisible(true);
+
+            avatar3.setVisible(false);
+            nickJugador3.setVisible(false);
+            puntajeJ3.setVisible(false);
+            colorBtn3.setVisible(false);
+
+            avatar4.setVisible(false);
+            nickJugador4.setVisible(false);
+            puntajeJ4.setVisible(false);
+            colorBtn4.setVisible(false);
+        } else if (jugadores.size() == 3) {
+            jugador1 = jugadores.get(0);
+            jugador1.setColor(Color.blue);
+            avatar1.setIcon(jugador1.getAvatar());
+            nickJugador1.setText(jugador1.getNickname());
+
+            jugador2 = jugadores.get(1);
+            jugador2.setColor(Color.red);
+            avatar2.setIcon(jugador2.getAvatar());
+            nickJugador2.setText(jugador2.getNickname());
+
+            jugador3 = jugadores.get(2);
+            jugador3.setColor(Color.green);
+            avatar3.setIcon(jugador2.getAvatar());
+            nickJugador3.setText(jugador2.getNickname());
+
+            avatar2.setVisible(true);
+            nickJugador2.setVisible(true);
+            puntajeJ2.setVisible(true);
+            colorBtn2.setVisible(true);
+
+            avatar3.setVisible(true);
+            nickJugador3.setVisible(true);
+            puntajeJ3.setVisible(true);
+            colorBtn3.setVisible(true);
+
+            avatar4.setVisible(false);
+            nickJugador4.setVisible(false);
+            puntajeJ4.setVisible(false);
+            colorBtn4.setVisible(false);
+        } else if (jugadores.size() == 4) {
+            jugador1 = jugadores.get(0);
+            jugador1.setColor(Color.blue);
+            avatar1.setIcon(jugador1.getAvatar());
+            nickJugador1.setText(jugador1.getNickname());
+
+            jugador2 = jugadores.get(1);
+            jugador2.setColor(Color.red);
+            avatar2.setIcon(jugador2.getAvatar());
+            nickJugador2.setText(jugador2.getNickname());
+
+            jugador3 = jugadores.get(2);
+            jugador3.setColor(Color.green);
+            avatar3.setIcon(jugador3.getAvatar());
+            nickJugador3.setText(jugador3.getNickname());
+
+            jugador4 = jugadores.get(3);
+            jugador4.setColor(Color.green);
+            avatar4.setIcon(jugador4.getAvatar());
+            nickJugador4.setText(jugador4.getNickname());
+
+            avatar2.setVisible(true);
+            nickJugador2.setVisible(true);
+            puntajeJ2.setVisible(true);
+            colorBtn2.setVisible(true);
+
+            avatar3.setVisible(true);
+            nickJugador3.setVisible(true);
+            puntajeJ3.setVisible(true);
+            colorBtn3.setVisible(true);
+
+            avatar4.setVisible(true);
+            nickJugador4.setVisible(true);
+            puntajeJ4.setVisible(true);
+            colorBtn4.setVisible(true);
+        }
+
+        if (tamanio == jugadores.size()) {
+            sortearTurnos();
+        }
+    }
+
     /**
      * Pone los colores por defecto a los jugadores.
      */
-    public void coloresDefecto (){
-        colorBtn1.setBackground(jugador1.getColor());
-        colorBtn2.setBackground(jugador2.getColor());
-        colorBtn3.setBackground(jugador3.getColor());
-        colorBtn4.setBackground(jugador4.getColor());
+    public void coloresDefecto() {
+        colorBtn1.setBackground(Color.blue);
+        colorBtn2.setBackground(Color.red);
+        colorBtn3.setBackground(Color.green);
+        colorBtn4.setBackground(Color.yellow);
     }
-    
+
     /**
      * Crea un nuevo marcador para la sala.
      */
-    public void crearMarcador (){
-        int [] puntajes = new int [4];
+    public void crearMarcador() {
+        int[] puntajes = new int[4];
         for (int i = 0; i < puntajes.length; i++) {
             puntajes[i] = 0;
         }
         marcador = new Marcador(puntajes);
     }
-    
+
     /**
      * Sortea los turnos de los jugadores.
      */
-    public void sortearTurnos (){
+    public void sortearTurnos() {
         List<Integer> num = new ArrayList<>(tamanio);
-        for (int i=0;i<tamanio;i++){
+        for (int i = 0; i < tamanio; i++) {
             num.add(i);
         }
         Random random = new Random();
-        turnos = new int [tamanio];
-        
+        turnos = new int[tamanio];
+
         int i = 0;
-        while (num.size()>=1){
+        while (num.size() >= 1) {
             int randomIndex = random.nextInt(num.size());
             turnos[i] = num.get(randomIndex);
             num.remove(randomIndex);
             i++;
         }
-        
-        jugadores = new ArrayList<>(turnos.length);
-        
+
         if (tamanio == 2) {
             jugadores.add(jugador1);
-            jugadores.add(jugador2);        
-        } else if (tamanio == 3){
+            jugadores.add(jugador2);
+        } else if (tamanio == 3) {
             jugadores.add(jugador1);
             jugadores.add(jugador2);
             jugadores.add(jugador3);
@@ -157,58 +317,57 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
             jugadores.add(jugador3);
             jugadores.add(jugador4);
         }
-        
+
         for (int j = 0; j < turnos.length; j++) {
             jugadores.get(j).setTurno(turnos[j]);
         }
-       
+
     }
-    
+
     /**
      * Crea un nuevo tablero para la sala.
      */
-    public void crearTablero (){
+    public void crearTablero() {
         if (tamanio == 2) {
-            matriz=new Forma[19][19];
-        } else if (tamanio == 3){
-            matriz=new Forma[39][39];
+            matriz = new Forma[19][19];
+        } else if (tamanio == 3) {
+            matriz = new Forma[39][39];
         } else {
-            matriz=new Forma[79][79];
+            matriz = new Forma[79][79];
         }
-        
-        tablero = new Tablero(jugador1, jugadores, turnos, tamanio, matriz, marcador, this, this);
+
+        tablero = new Tablero(jugadores, turnos, tamanio, matriz, marcador, iter, this, this);
     }
-    
+
     /**
      * Crea un nuevo panel de tablero.
      */
-    public void crearPanel (){
+    public void crearPanel() {
         this.setResizable(false);
         setBackground(Color.WHITE);
-      
-        for (Forma[] f : tablero.acomodar(true)) {
+
+        for (Forma[] f : acomodar(true)) {
             for (Forma l : f) {
                 pnlTablero.add(l);
             }
         }
     }
-    
+
     @Override
     public void puntajes() {
         int[] pun = marcador.getPuntajes();
-        
+
         puntajeJ1.setText("Puntaje: " + Integer.toString(marcador.getPuntajes()[0]));
         puntajeJ2.setText("Puntaje: " + Integer.toString(marcador.getPuntajes()[1]));
         puntajeJ3.setText("Puntaje: " + Integer.toString(marcador.getPuntajes()[2]));
         puntajeJ4.setText("Puntaje: " + Integer.toString(marcador.getPuntajes()[3]));
     }
- 
+
     @Override
     public void setMarcador(Marcador marcador) {
         this.marcador = marcador;
     }
-    
-    @Override
+
     public void turno(Jugador jugador) {
         String nombreJug = jugador.getNickname();
         if (nickJugador1.getText().equalsIgnoreCase(nombreJug)) {
@@ -216,24 +375,24 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
             nickJugador2.setForeground(Color.black);
             nickJugador3.setForeground(Color.black);
             nickJugador4.setForeground(Color.black);
-        } else if (nickJugador2.getText().equalsIgnoreCase(nombreJug)){
+        } else if (nickJugador2.getText().equalsIgnoreCase(nombreJug)) {
             nickJugador1.setForeground(Color.black);
             nickJugador2.setForeground(Color.red);
             nickJugador3.setForeground(Color.black);
             nickJugador4.setForeground(Color.black);
-        } else if (nickJugador3.getText().equalsIgnoreCase(nombreJug)){
+        } else if (nickJugador3.getText().equalsIgnoreCase(nombreJug)) {
             nickJugador1.setForeground(Color.black);
             nickJugador2.setForeground(Color.black);
             nickJugador3.setForeground(Color.red);
             nickJugador4.setForeground(Color.black);
-        } else if (nickJugador4.getText().equalsIgnoreCase(nombreJug)){
+        } else if (nickJugador4.getText().equalsIgnoreCase(nombreJug)) {
             nickJugador1.setForeground(Color.black);
             nickJugador2.setForeground(Color.black);
             nickJugador3.setForeground(Color.black);
             nickJugador4.setForeground(Color.red);
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -303,16 +462,16 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
         });
 
         nickJugador1.setFont(new java.awt.Font("Comic Sans MS", 1, 12)); // NOI18N
-        nickJugador1.setText("Jugador 1");
+        nickJugador1.setText("Esperando");
 
         nickJugador2.setFont(new java.awt.Font("Comic Sans MS", 1, 12)); // NOI18N
-        nickJugador2.setText("Jugador 2");
+        nickJugador2.setText("Esperando");
 
         nickJugador3.setFont(new java.awt.Font("Comic Sans MS", 1, 12)); // NOI18N
-        nickJugador3.setText("Jugador 3");
+        nickJugador3.setText("Esperando");
 
         nickJugador4.setFont(new java.awt.Font("Comic Sans MS", 1, 12)); // NOI18N
-        nickJugador4.setText("Jugador 4");
+        nickJugador4.setText("Esperando");
 
         pnlTablero.setBorder(new javax.swing.border.MatteBorder(null));
         pnlTablero.setPreferredSize(new java.awt.Dimension(746, 746));
@@ -438,13 +597,17 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
     }// </editor-fold>//GEN-END:initComponents
 
     private void colorBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colorBtn1ActionPerformed
+        jugadoresAux = jugadores.getJugadores();
         jugador1.setColor(selColor.showDialog(null, "Seleccione un Color", jugador1.getColor()));
+        jugadoresAux.get(0).setColor(jugador1.getColor());
         colorBtn1.setBackground(jugador1.getColor());
         tablero.reColorear();
     }//GEN-LAST:event_colorBtn1ActionPerformed
 
     private void colorBtn2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colorBtn2ActionPerformed
+        jugadoresAux = jugadores.getJugadores();
         jugador2.setColor(selColor.showDialog(null, "Seleccione un Color", jugador2.getColor()));
+        jugadoresAux.get(1).setColor(jugador2.getColor());
         colorBtn2.setBackground(jugador2.getColor());
         tablero.reColorear();
     }//GEN-LAST:event_colorBtn2ActionPerformed
@@ -462,14 +625,33 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
     }//GEN-LAST:event_colorBtn4ActionPerformed
 
     private void iniciarBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_iniciarBtnActionPerformed
+        try {
+            clientProxy.listo(jugadorNumero);
+        } catch (IOException ex) {
+            Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        boolean estanListos = false;
+        while (!estanListos) {
+            for (Jugador jugador : jugadores.getJugadores()) {
+                if (jugador.isListo() == false) {
+                    estanListos = false;
+                    break;
+                } else {
+                    estanListos = true;
+                }
+            }
+        }
+        
+        turnos = clientProxy.getTurnos();
         turno(jugadores.get(turnos[0]));
         JOptionPane.showMessageDialog(this, "Empieza " + jugadores.get(turnos[0]).getNickname());
-        tablero.iniciar();
+        iniciar();
         iniciarBtn.setEnabled(false);
     }//GEN-LAST:event_iniciarBtnActionPerformed
 
     private void rendirseBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rendirseBtnActionPerformed
-       
+
     }//GEN-LAST:event_rendirseBtnActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -494,4 +676,162 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos{
     private javax.swing.JButton rendirseBtn;
     // End of variables declaration//GEN-END:variables
 
+    /**
+     * Recibe la matriz y acomoda el tablero.
+     *
+     * @param add
+     */
+    public Forma[][] acomodar(boolean add) {
+        int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+        if (tamanio == 2) {
+            n1 = 0;
+            n2 = 11;
+            n3 = 73;
+            n4 = 81;
+        } else if (tamanio == 3) {
+            n1 = 0;
+            n2 = 5;
+            n3 = 35;
+            n4 = 39;
+        } else {
+            n1 = 0;
+            n2 = 3;
+            n3 = 17;
+            n4 = 19;
+        }
+
+        for (int x = 0; x < iter; x++) {
+            for (int y = 0; y < iter; y++) {
+                if (add) {
+                    matriz[x][y] = new Linea(false, null);
+                    matriz[x][y].addActionListener(this);
+                } else {
+                    matriz[x][y].setOwner(null);
+                    matriz[x][y].setTomado(false);
+                }
+                if (x % 2 == 0) {
+                    if (y % 2 == 0) {
+                        matriz[x][y].setBounds(n1 + (n4 * (y / 2)), n1 + (n4 * (x / 2)), n2, n2);
+                        matriz[x][y].setBorderPainted(false);
+                        matriz[x][y].setTomado(true);
+                        matriz[x][y].setOwner(new Jugador("Nulo", Color.black));
+                        matriz[x][y].setEnabled(false);
+                    } else {
+                        matriz[x][y].setBounds(n2 + (n4 * (y / 2)), n1 + (n4 * (x / 2)), n3, n2);
+                        matriz[x][y].setBorderPainted(false);
+                        matriz[x][y].setBackground(Color.white);
+                    }
+                } else {
+                    if (y % 2 == 0) {
+                        matriz[x][y].setBounds(n1 + (n4 * (y / 2)), n2 + (n4 * (x / 2)), n2, n3);
+                        matriz[x][y].setBorderPainted(false);
+                        matriz[x][y].setBackground(Color.white);
+                    } else {
+                        matriz[x][y] = new Cuadro();
+                        matriz[x][y].setBounds(n2 + (n4 * (y / 2)), n2 + (n4 * (x / 2)), n3, n3);
+                        matriz[x][y].setBorderPainted(false);
+                        matriz[x][y].setBackground(Color.white);
+                        matriz[x][y].setEnabled(false);
+                    }
+                }
+            }
+        }
+        tablero.setMatriz(matriz);
+        return matriz;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (comenzado) {
+            if (tablero.getI() == tamanio) {
+                tablero.setI(0);
+            }
+
+            int i2 = tablero.getI() + 1;
+            if (i2 >= tamanio) {
+                i2 = 0;
+            }
+            
+            Integer x = 0;
+            Integer y = 0;
+            boolean ban = false, tomado = false;
+            for (x = 0; x < iter; x++) {
+                for (y = 0; y < iter; y++) {
+                    if (ae.getSource() == tablero.getLinea(x, y)) {
+                        if (tablero.getLinea(x, y).getTomado()) {
+                            tomado = true;
+                        } else {
+                            try {
+                                tablero.getLinea(x, y).setTomado(true);
+                                tablero.getLinea(x, y).setBackground(jugadores.get(turnos[tablero.getI()]).getColor());
+                                tablero.getLinea(x, y).setOwner(jugadores.get(turnos[tablero.getI()]));
+                                turno(jugadores.get(turnos[i2]));
+                                ban = true;
+                                String xS = Integer.toString(x);
+                                String yS = Integer.toString(y);
+                                clientProxy.pintarLinea(jugadorNumero, xS, yS);
+                                break;
+                            } catch (IOException ex) {
+                                Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
+                
+                if (ban) {
+                    break;
+                }
+            }
+            if (!tomado) {
+                tablero.check(jugadores.get(turnos[tablero.getI()]), matriz);
+                tablero.setI(tablero.getI() + 1);
+                if (tablero.ganador()) {
+                    tablero.finJuego();
+                }
+            }
+        }
+    }
+
+    /**
+     * Cambia la variable de iteraciones según el tamaño del tablero.
+     */
+    public void iteraciones() {
+        if (tamanio == 2) {
+            iter = 19;
+        } else if (tamanio == 3) {
+            iter = 39;
+        } else {
+            iter = 79;
+        }
+    }
+
+    /**
+     * Cambia el booleano comenzado para saber que el juego ha iniciado.
+     */
+    public void iniciar() {
+        comenzado = true;
+    }
+    
+    /**
+     * Método que recibe los datos de un movimiento y lo registra en el 
+     * tablero.
+     * @param mov datos del movimiento
+     */
+    public void movimiento (String mov){
+        String numJugador = mov.substring(mov.indexOf("|")+1,mov.indexOf("|")+2);
+        mov = mov.substring(mov.indexOf("|"));
+        mov = mov.substring(3);
+        String equis = mov.substring(0,mov.indexOf("|"));
+        mov = mov.substring(2);
+        String ye = mov;
+        Jugador jugador;
+     
+        int noJugador = Integer.parseInt(numJugador);
+        int x = Integer.parseInt(equis);
+        int y = Integer.parseInt(ye);
+        
+        jugador = jugadoresAux.get(noJugador);
+        
+        tablero.reAcomodar(x, y, jugador);
+    }
 }

@@ -1,13 +1,14 @@
 package objetosNegocio;
 
 import java.awt.Color;
+import java.io.Serializable;
 import javax.swing.plaf.metal.MetalButtonUI;
 
 /**
  * Clase para las formas.
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
-public class Forma extends jButtonForma{
+public class Forma extends jButtonForma implements Serializable{
     
      //Dice si la forma ya fue tomada.
     private boolean tomado = false;

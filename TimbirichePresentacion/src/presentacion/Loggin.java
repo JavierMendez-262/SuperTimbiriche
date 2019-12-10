@@ -11,16 +11,28 @@ import objetosNegocio.Jugador;
  * @author Javier Obeso, J. Armando Méndez, J. Eduardo Montoya, L. Enrique Mendoza
  */
 public class Loggin extends javax.swing.JFrame {
+    private static Loggin instancia;
     private Jugador jugador;
+    
+    public static Loggin getInstancia() { 
+        if (instancia == null) 
+            instancia = new Loggin(); 
+  
+        return instancia; 
+    } 
     
     /**
      * Constructor principal.
      */
-    public Loggin() {
+    private Loggin() {
         centraVentana();
         initComponents();
+        instancia = this;
     }
 
+    /**
+     * Método para centrar la ventana.
+     */
     private void centraVentana() {
         Dimension pantalla = Toolkit.getDefaultToolkit().getScreenSize();
         int height = pantalla.height;
@@ -148,7 +160,7 @@ public class Loggin extends javax.swing.JFrame {
             jugador = new Jugador (nicknameTxt.getText(), avatar.getIcon());
             Inicio ini = new Inicio (jugador);
             ini.setVisible(true);
-            this.setVisible(false); 
+            this.setVisible(false);
         }
     }//GEN-LAST:event_aceptarBtnActionPerformed
 
