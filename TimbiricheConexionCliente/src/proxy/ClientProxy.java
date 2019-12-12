@@ -28,7 +28,6 @@ public class ClientProxy implements Runnable {
     private int portNumber;
     private Thread thread;
     private Sala sala;
-    private int[] turnos;
 
     public ClientProxy(String hostName, int portNumber, Sala sala) throws IOException {
         this.hostName = hostName;
@@ -51,7 +50,11 @@ public class ClientProxy implements Runnable {
     }
     
     public void pintarLinea (int noJugador, String x, String y) throws IOException{
-        clientConnection.sendRequest("pintar|" + noJugador + "|" + x + "|" + y);
+        clientConnection.sendRequest("pintar," + noJugador + "," + x + "," + y);
+    }
+    
+    public void establecerTurnos (int[] turnos) throws IOException{
+        clientConnection.sendRequest(turnos);
     }
 
     public void esperarNotificacion() {
@@ -70,7 +73,7 @@ public class ClientProxy implements Runnable {
                         jugadores.update((Jugadores) inputObject);
                         sala.entradaJugador();
                     }else if(inputObject.getClass() == int[].class) {
-                        this.turnos = (int[]) inputObject;
+                        sala.setTurnos((int[])inputObject);
                     } else if (inputObject.getClass() == String.class) {
                         sala.movimiento((String) inputObject);
                     } else {
@@ -84,8 +87,5 @@ public class ClientProxy implements Runnable {
             }
         }
     }
-    
-    public int[] getTurnos() {
-        return this.turnos;
-    }
+
 }
