@@ -43,7 +43,7 @@ public class Tablero {
      * @param player
      * @param matriz
      */
-    public void check(Jugador player, Forma[][] matriz){
+    public boolean check(Jugador player, Forma[][] matriz){
         boolean doble = false;
         for(int x=0;x<iter;x++){
             for(int y=0;y<iter;y++){
@@ -81,13 +81,14 @@ public class Tablero {
                         if (i2 >= tamanio) {
                             i2 = 0;
                         }
-                        iT.turno(jugadores.get(turnos[i2]));
+//                        iT.turno(jugadores.get(turnos[i2]));
                     }
                 }
             }
         }
         iM.setMarcador(marcador);
         iM.puntajes();
+        return doble;
     }
 
     public int getI() {
@@ -133,9 +134,9 @@ public class Tablero {
             }
         }
         
-        String punt = "Puntajes: ";
-        for (int j = 0; j < puntajes.length; j++) {
-            punt = punt + jugadores.get(0).getNickname() + ": " + Integer.toString(puntajes[j]);
+        String punt = "Puntajes: \n";
+        for (int j = 0; j < jugadores.size(); j++) {
+            punt = punt + jugadores.get(j).getNickname() + ": " + Integer.toString(puntajes[j]) + "\n";
         }
         
 //        if (tamanio == 2) {
@@ -226,6 +227,10 @@ public class Tablero {
         catch(Exception e){
         }
         reColorear();
+    }
+
+    public void setJugadores(Jugadores jugadores) {
+        this.jugadores = jugadores;
     }
 
 }

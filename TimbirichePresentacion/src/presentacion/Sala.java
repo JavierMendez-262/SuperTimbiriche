@@ -41,7 +41,6 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
     private Marcador marcador;
     private int[] turnos;
     private Jugadores jugadores;
-    private ArrayList <Jugador> jugadoresAux;
     private boolean comenzado = false;
     private int portNumber = 777;
     private ClientProxy clientProxy;
@@ -71,7 +70,6 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
         iteraciones();
         crearTablero();
         crearPanel();
-        jugadoresAux = jugadores.getJugadores();
     }
 
     /**
@@ -99,7 +97,6 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
         iteraciones();
         crearTablero();
         crearPanel();
-        jugadoresAux = jugadores.getJugadores();
     }
 
     /**
@@ -205,8 +202,8 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
 
             jugador3 = jugadores.get(2);
             jugador3.setColor(Color.green);
-            avatar3.setIcon(jugador2.getAvatar());
-            nickJugador3.setText(jugador2.getNickname());
+            avatar3.setIcon(jugador3.getAvatar());
+            nickJugador3.setText(jugador3.getNickname());
 
             avatar2.setVisible(true);
             nickJugador2.setVisible(true);
@@ -239,7 +236,7 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
             nickJugador3.setText(jugador3.getNickname());
 
             jugador4 = jugadores.get(3);
-            jugador4.setColor(Color.green);
+            jugador4.setColor(Color.yellow);
             avatar4.setIcon(jugador4.getAvatar());
             nickJugador4.setText(jugador4.getNickname());
 
@@ -258,10 +255,7 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
             puntajeJ4.setVisible(true);
             colorBtn4.setVisible(true);
         }
-
-        if (tamanio == jugadores.size()) {
-            sortearTurnos();
-        }
+        meterJugadores();
     }
 
     /**
@@ -289,21 +283,41 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
      * Sortea los turnos de los jugadores.
      */
     public void sortearTurnos() {
-        List<Integer> num = new ArrayList<>(tamanio);
-        for (int i = 0; i < tamanio; i++) {
-            num.add(i);
-        }
-        Random random = new Random();
-        turnos = new int[tamanio];
+        if (turnos == null){
+            List<Integer> num = new ArrayList<>(tamanio);
+            for (int i = 0; i < tamanio; i++) {
+                num.add(i);
+            }
+            Random random = new Random();
+            turnos = new int[tamanio];
 
-        int i = 0;
-        while (num.size() >= 1) {
-            int randomIndex = random.nextInt(num.size());
-            turnos[i] = num.get(randomIndex);
-            num.remove(randomIndex);
-            i++;
-        }
+            int i = 0;
+            while (num.size() >= 1) {
+                int randomIndex = random.nextInt(num.size());
+                turnos[i] = num.get(randomIndex);
+                num.remove(randomIndex);
+                i++;
+            }
 
+            try {
+                clientProxy.establecerTurnos(turnos);
+            } catch (IOException ex) {
+                Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public void setTurnos (int[] turnos){
+        this.turnos = turnos;     
+    }
+    
+    public void darTurnos (){
+        for (int j = 0; j < turnos.length; j++) {
+            jugadores.get(j).setTurno(turnos[j]);
+        }
+    }
+
+    public void meterJugadores(){
         if (tamanio == 2) {
             jugadores.add(jugador1);
             jugadores.add(jugador2);
@@ -317,13 +331,8 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
             jugadores.add(jugador3);
             jugadores.add(jugador4);
         }
-
-        for (int j = 0; j < turnos.length; j++) {
-            jugadores.get(j).setTurno(turnos[j]);
-        }
-
     }
-
+    
     /**
      * Crea un nuevo tablero para la sala.
      */
@@ -597,17 +606,13 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
     }// </editor-fold>//GEN-END:initComponents
 
     private void colorBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colorBtn1ActionPerformed
-        jugadoresAux = jugadores.getJugadores();
         jugador1.setColor(selColor.showDialog(null, "Seleccione un Color", jugador1.getColor()));
-        jugadoresAux.get(0).setColor(jugador1.getColor());
         colorBtn1.setBackground(jugador1.getColor());
         tablero.reColorear();
     }//GEN-LAST:event_colorBtn1ActionPerformed
 
     private void colorBtn2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_colorBtn2ActionPerformed
-        jugadoresAux = jugadores.getJugadores();
         jugador2.setColor(selColor.showDialog(null, "Seleccione un Color", jugador2.getColor()));
-        jugadoresAux.get(1).setColor(jugador2.getColor());
         colorBtn2.setBackground(jugador2.getColor());
         tablero.reColorear();
     }//GEN-LAST:event_colorBtn2ActionPerformed
@@ -643,9 +648,14 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
             }
         }
         
-        turnos = clientProxy.getTurnos();
-        turno(jugadores.get(turnos[0]));
-        JOptionPane.showMessageDialog(this, "Empieza " + jugadores.get(turnos[0]).getNickname());
+//        turnos = clientProxy.getTurnos();
+        if (jugadorNumero == 1){
+            sortearTurnos();
+            darTurnos();
+        }
+        jugadores = Jugadores.getInstance();
+        turno(jugadores.get(turnos[1]));
+        JOptionPane.showMessageDialog(this, "Empieza " + jugadores.get(turnos[1]).getNickname());
         iniciar();
         iniciarBtn.setEnabled(false);
     }//GEN-LAST:event_iniciarBtnActionPerformed
@@ -742,6 +752,8 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
 
     @Override
     public void actionPerformed(ActionEvent ae) {
+        jugadores = Jugadores.getInstance();
+        tablero.setJugadores(jugadores);
         if (comenzado) {
             if (tablero.getI() == tamanio) {
                 tablero.setI(0);
@@ -752,43 +764,42 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
                 i2 = 0;
             }
             
-            Integer x = 0;
-            Integer y = 0;
-            boolean ban = false, tomado = false;
-            for (x = 0; x < iter; x++) {
-                for (y = 0; y < iter; y++) {
-                    if (ae.getSource() == tablero.getLinea(x, y)) {
-                        if (tablero.getLinea(x, y).getTomado()) {
-                            tomado = true;
-                        } else {
-                            try {
-                                tablero.getLinea(x, y).setTomado(true);
-                                tablero.getLinea(x, y).setBackground(jugadores.get(turnos[tablero.getI()]).getColor());
-                                tablero.getLinea(x, y).setOwner(jugadores.get(turnos[tablero.getI()]));
-                                turno(jugadores.get(turnos[i2]));
-                                ban = true;
-                                String xS = Integer.toString(x);
-                                String yS = Integer.toString(y);
-                                clientProxy.pintarLinea(jugadorNumero, xS, yS);
-                                break;
-                            } catch (IOException ex) {
-                                Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+            if (i2 == jugadorNumero) {
+                Integer x = 0;
+                Integer y = 0;
+                boolean ban = false, tomado = false;
+                for (x = 0; x < iter; x++) {
+                    for (y = 0; y < iter; y++) {
+                        if (ae.getSource() == tablero.getLinea(x, y)) {
+                            if (tablero.getLinea(x, y).getTomado()) {
+                                tomado = true;
+                            } else {
+                                try {
+                                    ban = true;
+                                    String xS = Integer.toString(x);
+                                    String yS = Integer.toString(y);
+                                    clientProxy.pintarLinea(jugadorNumero, xS, yS);
+                                    break;
+                                } catch (IOException ex) {
+                                    Logger.getLogger(Sala.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                             }
                         }
                     }
+
+                    if (ban) {
+                        break;
+                    }
                 }
-                
-                if (ban) {
-                    break;
-                }
-            }
-            if (!tomado) {
-                tablero.check(jugadores.get(turnos[tablero.getI()]), matriz);
-                tablero.setI(tablero.getI() + 1);
-                if (tablero.ganador()) {
-                    tablero.finJuego();
-                }
-            }
+    //            if (!tomado) {
+    //                tablero.check(jugadores.get(turnos[tablero.getI()]), matriz);
+    //                tablero.setI(tablero.getI() + 1);
+    //                if (tablero.ganador()) {
+    //                    tablero.finJuego();
+    //                }
+    //            }
+            } 
+            
         }
     }
 
@@ -814,24 +825,52 @@ public class Sala extends javax.swing.JFrame implements IMarcador, ITurnos, Acti
     
     /**
      * Método que recibe los datos de un movimiento y lo registra en el 
-     * tablero.
+     * tablero-
      * @param mov datos del movimiento
      */
     public void movimiento (String mov){
-        String numJugador = mov.substring(mov.indexOf("|")+1,mov.indexOf("|")+2);
-        mov = mov.substring(mov.indexOf("|"));
-        mov = mov.substring(3);
-        String equis = mov.substring(0,mov.indexOf("|"));
-        mov = mov.substring(2);
+        String numJugador = mov.substring(mov.indexOf(",")+1,mov.indexOf(",")+2);
+        mov = mov.substring(mov.indexOf(",")+1);
+        mov = mov.substring(mov.indexOf(",")+1);
+        String equis = mov.substring(0,mov.indexOf(","));
+        mov = mov.substring(mov.indexOf(",")+1);
         String ye = mov;
         Jugador jugador;
-     
+       
         int noJugador = Integer.parseInt(numJugador);
         int x = Integer.parseInt(equis);
         int y = Integer.parseInt(ye);
         
-        jugador = jugadoresAux.get(noJugador);
+        jugador = jugadores.get(noJugador);
         
-        tablero.reAcomodar(x, y, jugador);
+        if (tablero.getI() == tamanio) {
+            tablero.setI(0);
+        }
+        
+        int i2 = tablero.getI() + 1;
+        if (i2 >= tamanio) {
+            i2 = 0;
+        }
+        
+        boolean tomado = false;
+        if (tablero.getLinea(x, y).getTomado()) {
+            tomado = true;
+        }
+        if (!tomado) {
+            tablero.getLinea(x, y).setTomado(true);
+            tablero.getLinea(x, y).setBackground(jugador.getColor());
+            tablero.getLinea(x, y).setOwner(jugador);
+
+//            tablero.reAcomodar(x, y, jugador);
+
+            boolean doble = tablero.check(jugador, matriz);
+            if (!doble) {
+                turno(jugadores.get(turnos[i2]));
+            }
+            tablero.setI(tablero.getI() + 1);
+            if (tablero.ganador()) {
+                tablero.finJuego();
+            }
+        }
     }
 }
